@@ -11,10 +11,11 @@ variable "key_pair_name" {
 }
 
 variable "public_key_path" {
-  description = "Path to your local public SSH key"
+  description = "Absolute path to your SSH public key"
   type        = string
-  default     = "~/.ssh/webdeploy.pub"
+  default     = "/c/Users/user/.ssh/webdeploy.pub"
 }
+
 
 variable "instance_type" {
   description = "Type of EC2 instance"
