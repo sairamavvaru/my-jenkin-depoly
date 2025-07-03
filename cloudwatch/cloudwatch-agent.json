@@ -1,0 +1,12 @@
+{
+  "metrics": {
+    "metrics_collected": {
+      "cpu": { "measurement": ["cpu_usage_idle"] },
+      "mem": { "measurement": ["mem_used_percent"] },
+      "disk": {
+        "measurement": ["used_percent"],
+        "resources": ["*"]
+      }
+    }
+  }
+}
