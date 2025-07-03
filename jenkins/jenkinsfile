@@ -4,7 +4,7 @@ pipeline {
   stages {
     stage('Clone') {
       steps {
-        git 'https://github.com/sairamavvaru/my-jenkin-depoly.git'
+        git branch: 'main', url: 'https://github.com/sairamavvaru/my-jenkin-depoly.git'
       }
     }
     stage('Test') {
