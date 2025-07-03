@@ -5,7 +5,8 @@ provider "aws" {
 # SSH Key Pair
 resource "aws_key_pair" "web_key" {
   key_name   = var.key_pair_name
-  public_key = file(var.public_key_path)
+  public_key = file("webdeploy.pub")
+
 
 }
 
