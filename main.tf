@@ -2,6 +2,12 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# Key Pair
+resource "aws_key_pair" "web_key" {
+  key_name   = "webdeploy-key"
+  public_key = file("~/.ssh/webdeploy.pub")
+}
+
 # VPC
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
@@ -10,7 +16,7 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Subnets
+# Subnet (Public)
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
@@ -21,16 +27,7 @@ resource "aws_subnet" "public" {
   }
 }
 
-resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1a"
-  tags = {
-    Name = "private-subnet"
-  }
-}
-
-# Internet Gateway and Routing
+# Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
   tags = {
@@ -38,6 +35,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
+# Route Table + Association
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main.id
 
@@ -56,11 +54,18 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-# Security Group for HTTP/HTTPS
+# Security Group (SSH + HTTP + HTTPS)
 resource "aws_security_group" "web_sg" {
   name        = "web-sg"
-  description = "Allow HTTP and HTTPS"
+  description = "Allow SSH, HTTP, and HTTPS"
   vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   ingress {
     from_port   = 80
@@ -88,22 +93,29 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# EC2 Instance with Nginx
+# EC2 Instance with Ubuntu
 resource "aws_instance" "web" {
-  ami                    = "ami-0c02fb55956c7d316" # Amazon Linux 2
-  instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.public.id
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  ami                         = "ami-0fc5d935ebf8bc3bc"  # Ubuntu 22.04 LTS in us-east-1
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public.id
+  vpc_security_group_ids      = [aws_security_group.web_sg.id]
+  key_name                    = aws_key_pair.web_key.key_name
 
   user_data = <<-EOF
               #!/bin/bash
-              yum update -y
-              amazon-linux-extras install nginx1 -y
+              apt update -y
+              apt install nginx -y
               systemctl start nginx
               systemctl enable nginx
               EOF
 
   tags = {
-    Name = "nginx-web-server"
+    Name = "ubuntu-nginx-server"
   }
+}
+
+# Output IP
+output "instance_public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.web.public_ip
 }
