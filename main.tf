@@ -5,7 +5,9 @@ provider "aws" {
 # VPC
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
-  tags = { Name = "main-vpc" }
+  tags = {
+    Name = "main-vpc"
+  }
 }
 
 # Subnets
@@ -14,29 +16,39 @@ resource "aws_subnet" "public" {
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-east-1a"
-  tags = { Name = "public-subnet" }
+  tags = {
+    Name = "public-subnet"
+  }
 }
 
 resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "private-subnet" }
+  tags = {
+    Name = "private-subnet"
+  }
 }
 
-# Internet Gateway & Route Table
+# Internet Gateway and Routing
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
-  tags = { Name = "main-igw" }
+  tags = {
+    Name = "main-igw"
+  }
 }
 
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main.id
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
-  tags = { Name = "public-route-table" }
+
+  tags = {
+    Name = "public-route-table"
+  }
 }
 
 resource "aws_route_table_association" "public_assoc" {
@@ -44,7 +56,7 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-# Security Group
+# Security Group for HTTP/HTTPS
 resource "aws_security_group" "web_sg" {
   name        = "web-sg"
   description = "Allow HTTP and HTTPS"
@@ -71,15 +83,17 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "web-sg" }
+  tags = {
+    Name = "web-sg"
+  }
 }
 
 # EC2 Instance with Nginx
 resource "aws_instance" "web" {
-  ami           = "ami-0c02fb55956c7d316" # Amazon Linux 2 AMI
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public.id
-  security_groups = [aws_security_group.web_sg.name]
+  ami                    = "ami-0c02fb55956c7d316" # Amazon Linux 2
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   user_data = <<-EOF
               #!/bin/bash
@@ -89,5 +103,7 @@ resource "aws_instance" "web" {
               systemctl enable nginx
               EOF
 
-  tags = { Name = "nginx-web-server" }
+  tags = {
+    Name = "nginx-web-server"
+  }
 }
