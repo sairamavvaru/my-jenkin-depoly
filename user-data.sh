@@ -1,1 +1,0 @@
-#!/bin/bashsudo yum update -ysudo yum install -y httpdsudo systemctl enable httpdsudo systemctl start httpdecho "Hello from Terraform!" > /var/www/html/index.html
