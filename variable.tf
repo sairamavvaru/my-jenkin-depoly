@@ -11,9 +11,7 @@ variable "key_pair_name" {
 }
 
 variable "public_key_path" {
-  description = "Absolute path to your SSH public key"
-  type        = string
-  default     = "/c/Users/user/.ssh/webdeploy.pub"
+  default = "${path.module}/webdeploy.pub"
 }
 
 
