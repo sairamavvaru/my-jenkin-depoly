@@ -1,0 +1,21 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Clone') {
+      steps {
+        git 'https://github.com/sairamavvaru/my-jenkin-depoly.git'
+      }
+    }
+    stage('Test') {
+      steps {
+        sh './app/tests.sh'
+      }
+    }
+    stage('Deploy') {
+      steps {
+        sh 'scp -i ~/.ssh/webdeploy app/index.html ubuntu@34.236.147.230:/var/www/html/index.html'
+      }
+    }
+  }
+}
